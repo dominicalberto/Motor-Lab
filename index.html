@@ -220,6 +220,12 @@ body.touring .fl,body.touring .mgear,body.touring .mbulb,body.touring .mbody,bod
 .ptt{position:relative;padding:0 40px;flex:none;text-align:center;font-weight:800;font-size:15px;letter-spacing:-.01em;margin:0 0 8px}
 .stt{flex:none;margin-top:6px;font-size:12px;font-weight:600;color:#1d1d1f;line-height:1.35;min-height:2.7em;font-variant-numeric:tabular-nums}
 .plot .pill{display:none}
+.st .card.plot{flex:1 0 auto!important;min-height:0!important}
+.card.plot.full{flex:none!important}
+.cvw{min-height:260px;contain:layout paint}
+.scene{contain:layout paint}
+.stt{height:2.8em;min-height:0;overflow:hidden;contain:layout}
+@media (max-width:520px){.st .cvw{min-height:320px}}
 .fsb{position:absolute;right:0;top:-5px;width:32px;height:32px;padding:0;border:0;border-radius:50%;background:var(--bg);color:var(--bl);display:grid;place-items:center;cursor:pointer;transition:transform .3s var(--sp)}
 .fsb:active{transform:scale(.88)}
 .card.plot.full{position:fixed;inset:0;z-index:30;border-radius:0;min-height:0;margin:0;box-shadow:none;background:#fff;overflow:auto;padding:calc(12px + env(safe-area-inset-top)) 14px calc(12px + env(safe-area-inset-bottom))}
@@ -374,7 +380,7 @@ function compute(){
   if(!isFinite(mx)||mx>1e6)mx=Math.abs(sp)*2;
   if(!isFinite(umx)||!isFinite(umn)){umx=12;umn=0}
   let V=T;{const ta=runs[0].m.ts,tb=runs[1].m.ts;if(typeof zm!=='undefined'&&zm&&isFinite(ta)&&isFinite(tb))V=Math.min(T,Math.max(5,Math.ceil(Math.max(ta,tb)*1.6)))}
-  D={runs,T:V,V,Tfull:T,sp,mx,umx,umn,sat,sx,M};
+  D={runs,T:V,V,Tfull:T,sp,mx,umx,umn,sat,sx,M,id:(window.__did=(window.__did||0)+1)};
   const f=(v,d,u)=>isFinite(v)?v.toFixed(d)+u:'\u2014';
   const rows=[['Rise time','tr',3,' s'],['Settling (2%)','ts',2,' s'],['Overshoot','os',2,' %'],['Steady-state error','sse',3,' %']];
   G('met').innerHTML='<table><thead><tr><th></th>'+runs.map(r=>`<th><i style="--c:${C[r.k]}"></i>${NM[r.k]}</th>`).join('')+'</tr></thead><tbody>'+rows.map(([n,k,d,u])=>`<tr><td>${n}</td>`+runs.map(r=>`<td>${f(r.m[k],d,u)}</td>`).join('')+'</tr>').join('')+'</tbody></table>';
@@ -382,11 +388,13 @@ function compute(){
   G('vd').textContent=!isFinite(a.os+b.os)?'Check your settings.':b.os<a.os-.5?`B overshoots ${(a.os-b.os).toFixed(1)} points less than A, and ${b.tr>a.tr?'rises '+((b.tr/a.tr-1)*100).toFixed(0)+'% slower':'is also faster'}. That\u2019s the speed vs. wobble trade-off!`:b.os>a.os+.5?`B overshoots ${(b.os-a.os).toFixed(1)} points more than A, and ${b.tr<a.tr?'rises '+((1-b.tr/a.tr)*100).toFixed(0)+'% faster':'isn\u2019t faster'}.`:'A and B behave almost the same. Try changing Kp or Kd more!';
   G('spv').textContent=sp;
   G('lg').innerHTML=''}
-let GM={};
+let GM={};let lastScn=0,lastStt='';
 function layout(){
   const r=cv.getBoundingClientRect();if(!r.width||!r.height||!D)return;
-  dpr=Math.min(devicePixelRatio||1,2);W=r.width;H=r.height;cv.width=gc.width=Math.round(W*dpr);cv.height=gc.height=Math.round(H*dpr);
-  const sm=W<460,fs=sm?10.5:12,l=sm?48:56,rr=sm?10:16,tm=4,bm=sm?36:42,gp=sm?12:18,aw=W-l-rr;
+  const sm=r.width<460,d0=Math.min(devicePixelRatio||1,sm?1.6:2),key=[r.width,r.height,d0,D.id].join();
+  if(GM.key===key){draw();return}
+  dpr=d0;W=r.width;H=r.height;cv.width=gc.width=Math.round(W*dpr);cv.height=gc.height=Math.round(H*dpr);
+  const fs=sm?10.5:12,l=sm?48:56,rr=sm?10:16,tm=4,bm=sm?36:42,gp=sm?12:18,aw=W-l-rr;
   const hiB=Math.max(.5,Math.min(D.umx*1.08,13.2));let loB=Math.max(-13.2,Math.min(0,D.umn)*1.1);if(loB>-1e-9)loB=-hiB*.05;
   const g=gc.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,W,H);
   const lf=sm?10:11.5,rh=sm?14:17,sw=sm?18:24,ig=sm?10:16,FF=' -apple-system,"Segoe UI",system-ui,sans-serif';
@@ -399,7 +407,7 @@ function layout(){
   const flow=items=>{const rows=[];let cur=[],cw=0;items.forEach(o=>{o.ww=sw+5+g.measureText(o.t).width;if(cur.length&&cw+ig+o.ww>aw){rows.push({it:cur,w:cw});cur=[];cw=0}cw+=(cur.length?ig:0)+o.ww;cur.push(o)});if(cur.length)rows.push({it:cur,w:cw});return rows};
   const RA=flow(la),RB=flow(lb),lhA=RA.length*rh+4,lhB=RB.length*rh+4;
   const ph=Math.max(40,(H-tm-bm-gp-lhA-lhB)/2);
-  GM={sm,fs,l,r:W-rr,w:aw,A:{t:tm+lhA,h:ph,lo:-D.mx*.04,hi:D.mx,lb:'Speed (rad/s)'},B:{t:tm+lhA+ph+gp+lhB,h:ph,lo:loB,hi:hiB,lb:'Output (V)'}};
+  GM={key,sm,fs,l,r:W-rr,w:aw,A:{t:tm+lhA,h:ph,lo:-D.mx*.04,hi:D.mx,lb:'Speed (rad/s)'},B:{t:tm+lhA+ph+gp+lhB,h:ph,lo:loB,hi:hiB,lb:'Output (V)'}};
   g.font='500 '+fs+'px'+FF;
   const xs=nice(D.T,Math.max(3,Math.min(8,W/60|0))),fx=v=>+v.toFixed(4),gx=t=>GM.l+t/D.T*GM.w;
   [GM.A,GM.B].forEach((P,pi)=>{
@@ -446,14 +454,19 @@ function draw(){
       if(i<D.M-1)cx.lineTo(gx(hx),gy(P,ip(arr)));cx.stroke();
       cx.setLineDash([]);cx.fillStyle='#fff';cx.beginPath();cx.arc(gx(hx),gy(P,ip(arr)),sm?3.5:4.5,0,7);cx.fill();cx.lineWidth=2;cx.stroke();cx.restore()});
     if(r.k===gr){ang=av;sv=r.yv}}
-  const rg=D.runs.find(r=>r.k===gr)||D.runs[0],tol=.02*Math.abs(D.sp);
-  const stx=Math.abs(rg.yv-D.sp)<=tol?'Within \u00b12% band':rg.yv>D.sp?'Overshooting setpoint':'Speeding up';
-  G('stt').textContent='Time: '+p.toFixed(1)+' s | Setpoint: '+D.sp.toFixed(2)+' rad/s | '+gr+' speed: '+rg.yv.toFixed(2)+' rad/s | '+gr+' voltage: '+rg.uv.toFixed(1)+' V | '+stx;
-  rot(['ga','gaS'],ang,320,80);rot(['gb','gbS'],22.5-ang*16/12,355.4,165.5);
-  const fr2=Math.min(Math.max(sv/(D.sp*1.5),0),1);G('gf').setAttribute('stroke-dasharray',fr2*100+' 100');
-  G('gf').setAttribute('stroke',Math.abs(sv-D.sp)<.05*Math.abs(D.sp)?'#34c759':sv>D.sp?'#ff9f0a':'#0071e3');
-  G('nd').setAttribute('transform',`rotate(${fr2*180-90} 120 160)`);G('gv').textContent=sv.toFixed(2);
-  G('sl').value=p/D.T*1000;G('tm').textContent=p.toFixed(1)+' / '+(+D.T.toFixed(1))+' s'}
+  const now=performance.now();
+  if(!ps.play||now-lastScn>40){
+    lastScn=now;
+    const rg=D.runs.find(r=>r.k===gr)||D.runs[0],tol=.02*Math.abs(D.sp);
+    const stx=Math.abs(rg.yv-D.sp)<=tol?'Within \u00b12% band':rg.yv>D.sp?'Overshooting':'Speeding up';
+    const s=sm?'Time '+p.toFixed(1)+' s | Setpoint '+D.sp.toFixed(2)+' | '+gr+' '+rg.yv.toFixed(2)+' rad/s, '+rg.uv.toFixed(1)+' V | '+stx
+      :'Time: '+p.toFixed(1)+' s | Setpoint: '+D.sp.toFixed(2)+' rad/s | '+gr+' speed: '+rg.yv.toFixed(2)+' rad/s | '+gr+' voltage: '+rg.uv.toFixed(1)+' V | '+stx;
+    if(s!==lastStt){G('stt').textContent=s;lastStt=s}
+    rot(['ga','gaS'],ang,320,80);rot(['gb','gbS'],22.5-ang*16/12,355.4,165.5);
+    const fr2=Math.min(Math.max(sv/(D.sp*1.5),0),1);G('gf').setAttribute('stroke-dasharray',fr2*100+' 100');
+    G('gf').setAttribute('stroke',Math.abs(sv-D.sp)<.05*Math.abs(D.sp)?'#34c759':sv>D.sp?'#ff9f0a':'#0071e3');
+    G('nd').setAttribute('transform',`rotate(${fr2*180-90} 120 160)`);G('gv').textContent=sv.toFixed(2);
+    G('sl').value=p/D.T*1000;G('tm').textContent=p.toFixed(1)+' / '+(+D.T.toFixed(1))+' s'}}
 const IC={play:'<svg width="16" height="16" viewBox="0 0 14 14"><path d="M3 1.5v11l9-5.5z" fill="#fff"/></svg>',pause:'<svg width="16" height="16" viewBox="0 0 14 14"><rect x="2.5" y="1.5" width="3.2" height="11" rx="1" fill="#fff"/><rect x="8.3" y="1.5" width="3.2" height="11" rx="1" fill="#fff"/></svg>',redo:'<svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M13 8a5 5 0 1 1-1.8-3.8M13 2v3h-3"/></svg>'};
 const btn=()=>G('pp').innerHTML=ps.play?IC.pause:(D&&ps.p>=D.V?IC.redo:IC.play);
 function tick(ts){if(ps.play){ps.p=Math.min(D.V,ps.p+(ts-ps.last)/1000*D.V/7);ps.last=ts;if(ps.p>=D.V){ps.play=false;btn()}}draw();raf=ps.play?requestAnimationFrame(tick):0}
@@ -461,13 +474,13 @@ function play(){if(!D)return;if(ps.p>=D.V)ps.p=0;ps.play=true;ps.last=performanc
 function clearSel(){$$('.blk').forEach(x=>x.classList.remove('sel'));G('dg').classList.remove('has-sel')}
 function show(n){
   n=Math.max(0,Math.min(3,n|0));step=n;
-  $$('main .st').forEach((e,i)=>{e.hidden=i!==n;e.classList.remove('enter');if(i===n){void e.offsetWidth;e.classList.add('enter')}});
+  $$('main .st').forEach((e,i)=>{e.hidden=i!==n;e.classList.remove('enter');if(i===n&&n!==2){void e.offsetWidth;e.classList.add('enter')}});
   $$('#tabs button').forEach((b,i)=>{b.classList.toggle('on',i===n);b.classList.toggle('done',i<n)});
   G('th').style.transform=`translateX(${n*100}%)`;
   clearSel();setBub(MSG[n]);
   G('go').textContent=n===3?'Play again':'Continue';G('bk').disabled=n===0;
   ps.play=false;
-  if(n===2){requestAnimationFrame(()=>{layout();ps.p=0;play()})}else btn()}
+  if(n===2){requestAnimationFrame(()=>{layout();requestAnimationFrame(()=>{ps.p=0;play()})})}else btn()}
 G('go').onclick=()=>show(step===3?2:step+1);
 G('bk').onclick=()=>show(step-1);
 $$('#tabs button').forEach(b=>b.onclick=()=>show(+b.dataset.n));
