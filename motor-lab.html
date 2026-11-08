@@ -1,0 +1,618 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Motor Lab - PID Lesson by Dominic Andrew M. Alberto</title>
+<meta name="theme-color" content="#f5f5f7">
+<meta name="author" content="Dominic Andrew M. Alberto">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2080%2080%22%3E%3Cline%20x1%3D%2240%22%20y1%3D%2217%22%20x2%3D%2240%22%20y2%3D%229%22%20stroke%3D%22%230058b0%22%20stroke-width%3D%223%22%20stroke-linecap%3D%22round%22%2F%3E%3Ccircle%20cx%3D%2240%22%20cy%3D%227%22%20r%3D%224.5%22%20fill%3D%22%23ffcc00%22%2F%3E%3Ccircle%20cx%3D%229%22%20cy%3D%2245%22%20r%3D%226%22%20fill%3D%22%230058b0%22%2F%3E%3Ccircle%20cx%3D%2271%22%20cy%3D%2245%22%20r%3D%226%22%20fill%3D%22%230058b0%22%2F%3E%3Crect%20x%3D%2211%22%20y%3D%2217%22%20width%3D%2258%22%20height%3D%2255%22%20rx%3D%2225%22%20fill%3D%22%230a84ff%22%2F%3E%3Crect%20x%3D%2219%22%20y%3D%2229%22%20width%3D%2242%22%20height%3D%2229%22%20rx%3D%2214.5%22%20fill%3D%22%23fff%22%2F%3E%3Cellipse%20cx%3D%2231%22%20cy%3D%2242%22%20rx%3D%223.6%22%20ry%3D%224.8%22%20fill%3D%22%231d1d1f%22%2F%3E%3Cellipse%20cx%3D%2249%22%20cy%3D%2242%22%20rx%3D%223.6%22%20ry%3D%224.8%22%20fill%3D%22%231d1d1f%22%2F%3E%3Cpath%20d%3D%22M35%2050Q40%2055%2045%2050%22%20fill%3D%22none%22%20stroke%3D%22%231d1d1f%22%20stroke-width%3D%222.6%22%20stroke-linecap%3D%22round%22%2F%3E%3Ccircle%20cx%3D%2260%22%20cy%3D%2267%22%20r%3D%226%22%20fill%3D%22%23ffcc00%22%2F%3E%3C%2Fsvg%3E">
+<style>
+:root{--bl:#0071e3;--bld:#0058b0;--gr:#34c759;--or:#ff9f0a;--rd:#ff3b30;--pu:#af52de;--tx:#1d1d1f;--mu:#6e6e73;--ln:#e5e5ea;--bg:#f5f5f7;--sp:cubic-bezier(.34,1.56,.64,1);--ease:cubic-bezier(.2,.8,.2,1)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
+html,body{height:100%;margin:0;overflow:hidden;overscroll-behavior:none}
+body{color:var(--tx);background:var(--bg);font:500 15px/1.4 -apple-system,BlinkMacSystemFont,"SF Pro Rounded","SF Pro Display","Segoe UI Variable Display","Segoe UI",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit}
+a{color:inherit;text-decoration:none}
+#app{height:100vh;height:100dvh;max-width:980px;margin:0 auto;display:flex;flex-direction:column}
+.hd{flex:none;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 16px 6px;padding-top:calc(10px + env(safe-area-inset-top))}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.logo{flex:none;width:38px;height:38px;filter:drop-shadow(0 2px 6px #0058d055)}
+.brand b{display:block;font-size:17px;font-weight:800;letter-spacing:-.01em;line-height:1.15}
+.brand small{display:block;color:var(--mu);font-size:12px;font-weight:600;line-height:1.25}
+.hr{flex:none;display:flex;align-items:center;gap:8px}
+.cog{flex:none;min-width:38px;height:38px;border:0;border-radius:999px;background:#fff;box-shadow:0 1px 3px #0002;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:0 11px;color:var(--tx);font-weight:800;font-size:15px;transition:transform .35s var(--sp)}
+.cog:hover{transform:scale(1.05)}.cog:active{transform:scale(.92)}
+.cog.set{color:var(--bl)}
+.cog .lb{display:none;font-size:14px}
+.tabs{flex:none;position:relative;display:grid;grid-template-columns:repeat(4,1fr);margin:4px 16px 8px;background:#e8e8ed;border-radius:14px;padding:3px}
+.thumb{position:absolute;top:3px;bottom:3px;left:3px;width:calc((100% - 6px)/4);border-radius:11px;background:var(--bl);box-shadow:0 2px 8px #0071e355;transition:transform .5s var(--sp)}
+.tabs button{position:relative;z-index:1;display:flex;align-items:center;justify-content:center;gap:6px;border:0;background:none;color:var(--mu);font-weight:700;font-size:13px;padding:8px 2px;cursor:pointer;transition:color .25s;white-space:nowrap}
+.tabs button i{font-style:normal;width:20px;height:20px;border-radius:50%;background:#fff;color:var(--mu);display:grid;place-items:center;font-size:11px;font-weight:800;flex:none;transition:background .25s,color .25s,transform .4s var(--sp)}
+.tabs button.done{color:var(--tx)}.tabs button.done i{background:var(--gr);color:#fff;font-size:0}.tabs button.done i::after{content:"\2713";font-size:12px}
+.tabs button.on{color:#fff}.tabs button.on i{background:#fff;color:var(--bl);transform:scale(1.1)}
+.tabs button:active i{transform:scale(.85)}
+main{flex:1;min-height:0;padding:0 16px}
+.st{display:flex;flex-direction:column;gap:10px;height:100%;min-height:0;padding:2px 4px 12px;margin:0 -4px;overflow-y:auto;scrollbar-width:none}
+.st::-webkit-scrollbar{display:none}
+.st.enter{animation:in .45s var(--ease)}
+@keyframes in{from{opacity:0;transform:translateY(12px)}}
+.coach{flex:none;display:flex;align-items:center;gap:10px}
+.coach .mv{margin-right:2px}
+.mv{flex:none;width:58px;height:58px}
+.mv.hop{animation:hop .7s var(--sp)}
+@keyframes hop{30%{transform:translateY(-12px) scale(1.08) rotate(-4deg)}60%{transform:translateY(0) scale(.96)}}
+.mas{display:block;width:100%;height:100%;overflow:visible}
+.mbody{transform-box:fill-box;transform-origin:50% 100%;animation:bob 3.2s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(-3px)}}
+.eyes{transform-box:fill-box;transform-origin:center;animation:blink 4.5s infinite}
+@keyframes blink{0%,93%,100%{transform:scaleY(1)}96%{transform:scaleY(.08)}}
+.mgear{transform-box:fill-box;transform-origin:center;animation:spin 6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.mbulb{animation:glow 2s ease-in-out infinite}
+@keyframes glow{50%{opacity:.45}}
+.bub{position:relative;flex:1;background:#fff;border-radius:16px;padding:9px 14px;font-weight:700;font-size:14px;box-shadow:0 1px 3px #0002;min-height:42px;display:flex;align-items:center}
+.bub::before{content:"";position:absolute;left:-6px;top:50%;width:12px;height:12px;margin-top:-6px;background:#fff;transform:rotate(45deg);border-radius:2px}
+.bub span{display:block}.bub span.swap{animation:swap .4s var(--ease)}
+@keyframes swap{from{opacity:0;transform:translateY(6px)}}
+h1{flex:none;font-size:22px;font-weight:800;letter-spacing:-.02em;margin:2px 0 0}
+.lead{flex:none;color:var(--mu);margin:-6px 0 0;font-size:14px}
+.card{background:#fff;border-radius:20px;padding:14px;box-shadow:0 1px 2px #0000000a,0 4px 14px #0000000d}
+.card.fill{flex:1;min-height:0;display:flex;align-items:center;justify-content:center}
+.card.fill svg{width:100%;height:auto;max-height:100%}
+svg text{font-family:inherit}
+.blk{cursor:pointer;transform-box:fill-box;transform-origin:center;transition:transform .45s var(--sp),opacity .3s,filter .3s}
+.blk:hover{transform:translateY(-3px) scale(1.03)}
+.blk:active{transform:scale(.94)}
+.blk.sel{transform:scale(1.09);filter:drop-shadow(0 8px 10px #00000040)}
+.blk.sel>circle:not(.ic){stroke:var(--bl)}
+.has-sel .blk:not(.sel){opacity:.38}
+.st.enter .blk{animation:rise .55s var(--sp) backwards;animation-delay:calc(var(--i)*70ms + 120ms)}
+@keyframes rise{from{opacity:0;transform:scale(.8) translateY(10px)}}
+.fl{stroke-dasharray:7 9;animation:fl 1s linear infinite}@keyframes fl{to{stroke-dashoffset:-16}}
+.hint{flex:none;display:flex;align-items:center;justify-content:center;color:var(--mu);font-size:13px;font-weight:700;margin:0}
+.hint i{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--bl);margin-right:8px;animation:pulse 1.8s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 #0071e366}70%,100%{box-shadow:0 0 0 9px #0071e300}}
+.ref{flex:none;display:flex;align-items:center;gap:10px;background:#fff;border-radius:14px;padding:9px 12px;font-size:12px;color:var(--mu);box-shadow:0 1px 3px #0002;transition:transform .3s var(--sp)}
+.ref:hover{transform:translateY(-2px)}.ref:active{transform:scale(.98)}
+.ref svg{flex:none;color:var(--bl)}
+.ref span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ref b{color:var(--tx);font-weight:700}
+.opts{flex:none;display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.opt{position:relative;border:2px solid transparent;border-radius:18px;padding:12px 10px;cursor:pointer;background:#fff;box-shadow:0 1px 2px #0000000a,0 4px 14px #0000000d;text-align:left;transition:transform .4s var(--sp),border-color .2s,background .2s}
+.opt:active{transform:scale(.95)}
+.opt.on{border-color:var(--bl);background:#eaf3ff;transform:scale(1.03)}
+.opt.on:active{transform:scale(.97)}
+.opt.on::after{content:"\2713";position:absolute;top:8px;right:8px;width:18px;height:18px;border-radius:50%;background:var(--bl);color:#fff;font-size:11px;font-weight:800;display:grid;place-items:center;animation:chk .45s var(--sp)}
+@keyframes chk{from{transform:scale(0)}}
+.opt b{display:flex;align-items:center;gap:6px;font-size:16px;font-weight:800}.opt small{display:block;color:var(--mu);margin-top:3px;font-size:12px}.opt code{display:block;font-weight:700;font-size:12px;color:var(--mu);margin-top:2px}
+.dot{flex:none;width:10px;height:10px;border-radius:50%;background:var(--c)}
+.sl{display:grid;grid-template-columns:28px 1fr 46px;align-items:center;gap:10px;margin:6px 0;font-weight:800}
+.sl output{text-align:right;color:var(--bl);font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;height:10px;appearance:none;-webkit-appearance:none;background:var(--ln);border-radius:6px;outline:0;margin:0}
+input[type=range]::-webkit-slider-thumb{appearance:none;-webkit-appearance:none;width:26px;height:26px;border-radius:50%;background:#fff;border:0;box-shadow:0 1px 4px #0004,0 0 0 1px #0001;cursor:pointer;transition:transform .25s var(--sp)}
+input[type=range]:active::-webkit-slider-thumb{transform:scale(1.18)}
+input[type=range]::-moz-range-thumb{width:24px;height:24px;border-radius:50%;background:#fff;border:0;box-shadow:0 1px 4px #0004}
+.row{flex:none;display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:8px}
+.pill{display:inline-flex;align-items:center;gap:6px;background:var(--bg);border-radius:999px;padding:4px 11px;font-size:13px;font-weight:700}
+.pill i{width:10px;height:10px;border-radius:50%;background:var(--c)}.pill em{font-style:normal;min-width:34px;font-variant-numeric:tabular-nums}
+.seg{position:relative;display:inline-grid;grid-template-columns:1fr 1fr;background:#e8e8ed;border-radius:12px;padding:3px}
+.seg .sth{position:absolute;top:3px;bottom:3px;left:3px;width:calc((100% - 6px)/2);border-radius:9px;background:#fff;box-shadow:0 1px 3px #0003;transition:transform .45s var(--sp)}
+.seg button{position:relative;z-index:1;border:0;background:none;font-weight:700;padding:5px 14px;border-radius:9px;color:var(--mu);cursor:pointer;font-size:13px;white-space:nowrap;transition:color .25s}.seg button.on{color:var(--tx)}
+.scene{flex:none;height:clamp(100px,27vh,230px);height:clamp(100px,27dvh,230px);padding:6px}
+.scene svg{width:100%;height:100%;display:block}
+.plot{flex:1;min-height:0;display:flex;flex-direction:column}
+.cvw{position:relative;flex:1;min-height:80px}
+canvas{position:absolute;inset:0;width:100%;height:100%}
+.scr{flex:none;display:flex;gap:12px;align-items:center;margin-top:8px}
+.scr span{flex:none;min-width:84px;text-align:right;color:var(--mu);font-variant-numeric:tabular-nums;font-size:13px;font-weight:700;white-space:nowrap}
+.ib{flex:none;width:40px;height:40px;border:0;border-radius:50%;background:var(--bl);cursor:pointer;display:grid;place-items:center;box-shadow:0 3px 10px #0071e355;transition:transform .35s var(--sp)}
+.ib:hover{transform:scale(1.06)}.ib:active{transform:scale(.88)}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+th,td{padding:9px 6px;text-align:right;border-top:1px solid var(--ln)}
+th:first-child,td:first-child{text-align:left;color:var(--mu);font-weight:600}
+th{border-top:0;font-weight:800;font-size:13px;white-space:nowrap}th i{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--c);margin-right:5px}
+td{font-weight:800;white-space:nowrap}
+@media (max-width:520px){th,td{padding:9px 4px;font-size:13px}th:first-child,td:first-child{white-space:normal}}
+.note{flex:none;color:var(--mu);font-size:12px;margin:0}
+.refc{flex:none;display:flex;align-items:center;gap:12px;transition:transform .35s var(--sp)}
+.refc:hover{transform:translateY(-2px)}.refc:active{transform:scale(.98)}
+.refc .ri{flex:none;width:38px;height:38px;border-radius:11px;background:#eaf3ff;color:var(--bl);display:grid;place-items:center}
+.refc .rt{flex:1;min-width:0;font-size:12px;color:var(--mu)}
+.refc .rt small{display:block;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--bl)}
+.refc .rt b{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;color:var(--tx);font-size:13px;line-height:1.3}
+.refc .rt span{display:block;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.refc .ra{flex:none;color:#c7c7cc}
+.credit{flex:none;text-align:center;color:var(--mu);font-size:12px;font-weight:700;margin:0}
+footer{flex:none;display:grid;grid-template-columns:1fr 2fr;gap:10px;padding:10px 16px;padding-bottom:calc(36px + env(safe-area-inset-bottom));background:linear-gradient(#f5f5f700,var(--bg) 30%)}
+.btn{border:0;border-radius:999px;padding:14px 0;font-weight:800;font-size:16px;cursor:pointer;transition:transform .35s var(--sp),opacity .2s,filter .2s}
+.btn:active{transform:scale(.95)}
+.btn:not(:disabled):hover{filter:brightness(1.05)}
+.btn.p{background:var(--bl);color:#fff;box-shadow:0 4px 14px #0071e355}
+.btn.s{background:#e8e8ed;color:var(--tx)}
+.btn:disabled{opacity:.35;cursor:default}
+.sheet{position:fixed;inset:0;z-index:20;background:#0006;display:flex;align-items:flex-end;justify-content:center;animation:fade .25s}
+.panel{width:100%;max-width:560px;max-height:92vh;max-height:92dvh;overflow:auto;background:#fff;border-radius:24px 24px 0 0;padding:16px 18px calc(18px + env(safe-area-inset-bottom));animation:up .5s var(--ease)}
+@keyframes fade{from{opacity:0}}@keyframes up{from{transform:translateY(40px);opacity:0}}
+.ph{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}.ph b{font-size:18px;font-weight:800}
+.ph button{border:0;background:none;color:var(--bl);font-weight:800;font-size:16px;cursor:pointer;padding:4px 8px}
+.g{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px}
+.g label{font-size:12px;color:var(--mu);font-weight:700}
+.g input[type=number]{display:block;width:100%;margin-top:4px;padding:10px 12px;border:1.5px solid var(--ln);border-radius:12px;font:inherit;font-weight:700;color:var(--tx);outline:0;background:#fff;transition:border-color .2s,box-shadow .2s}
+.g input:focus{border-color:var(--bl);box-shadow:0 0 0 4px #0071e322}
+.tg{display:flex;align-items:center;gap:10px;font-weight:700;margin-top:12px}.tg input{width:20px;height:20px;accent-color:var(--bl)}
+.rs{margin-top:14px;border:0;background:#e8e8ed;border-radius:12px;padding:10px 16px;font-weight:700;cursor:pointer;transition:transform .3s var(--sp)}.rs:active{transform:scale(.95)}
+.tour{position:fixed;inset:0;z-index:40}
+.spot{position:fixed;border-radius:18px;box-shadow:0 0 0 9999px #0000008c,0 0 0 3px #ffffffd9;transition:left .55s var(--ease),top .55s var(--ease),width .55s var(--ease),height .55s var(--ease);pointer-events:none}
+.spot.none{box-shadow:0 0 0 9999px #0000008c;border-radius:0}
+.tip{position:fixed;background:#fff;border-radius:24px;padding:16px;box-shadow:0 16px 48px #0005;transition:left .55s var(--ease),top .55s var(--ease)}
+.tip .th{display:flex;align-items:center;gap:10px}
+.tip .mv{width:50px;height:50px}
+.tip small{display:block;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--bl)}
+.tip b{display:block;font-size:18px;font-weight:800;letter-spacing:-.01em}
+.tip p{margin:10px 0 12px;color:var(--mu);font-size:14px;line-height:1.45}
+.td{display:flex;gap:6px;justify-content:center;margin-bottom:12px}
+.td i{width:6px;height:6px;border-radius:3px;background:#d1d1d6;transition:width .4s var(--sp),background .3s}.td i.on{width:20px;background:var(--bl)}
+.tb{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.tb span{display:flex;gap:8px}
+.tb button{border:0;border-radius:999px;padding:10px 18px;font-weight:800;font-size:14px;cursor:pointer;transition:transform .3s var(--sp),opacity .2s}
+.tb button:active{transform:scale(.94)}
+.tb .sk{background:none;color:var(--mu);padding:10px 4px}
+.tb .pv{background:#e8e8ed}.tb .nx{background:var(--bl);color:#fff;box-shadow:0 3px 10px #0071e355}
+.tb button:disabled{opacity:.35;cursor:default}
+.tcont.swap{animation:swap .4s var(--ease)}
+@media (min-width:521px){.cog .lb{display:inline}}
+@media (min-width:700px){.sheet{align-items:center}.panel{border-radius:24px}h1{font-size:26px}}
+@media (max-width:520px){.opt small{display:none}.opt b{font-size:14px}.opt code{font-size:11px}.tabs button{font-size:12px;gap:4px}.tabs button i{width:18px;height:18px}}
+@media (max-height:700px){.note{display:none}}
+@media (max-height:680px){.lead{display:none}.coach .mv{width:46px;height:46px}h1{font-size:19px}.card{padding:10px}.btn{padding:11px 0}}
+@media (max-height:560px){.coach,.ref{display:none}.tabs{margin-bottom:4px}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+
+
+.tcont.swap{animation-duration:.22s}
+.sheet{animation-duration:.18s}
+.panel{animation-duration:.28s;-webkit-overflow-scrolling:touch}
+.st.enter{animation-duration:.28s}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+button,a,.blk,.opt{touch-action:manipulation}
+@media (hover:none){.blk:hover,.ref:hover,.refc:hover,.cog:hover,.ib:hover,.opt:hover{transform:none}}
+@media (max-width:360px){.brand small{display:none}.hd{padding-left:12px;padding-right:12px}}
+body.touring .sheet,body.touring .panel{animation:none!important}
+.tcont.swap{animation:swap .3s var(--ease)!important}
+
+body.touring .sheet{background:transparent!important}
+
+.mv.hop{animation:none!important}
+
+
+.tip{box-shadow:0 10px 30px #0004}
+body.touring .fl,body.touring .mgear,body.touring .mbulb,body.touring .mbody,body.touring .eyes{animation:none!important}
+@media (max-width:700px){.card,.opt,.ref{box-shadow:0 1px 3px #0000001a}}
+.spot,.tip{left:0!important;top:0!important;will-change:transform;backface-visibility:hidden;contain:layout style}
+.spot{transition:transform .7s cubic-bezier(.22,1,.36,1),width .7s cubic-bezier(.22,1,.36,1),height .7s cubic-bezier(.22,1,.36,1),border-radius .7s!important}
+.tip{transition:transform .8s cubic-bezier(.22,1.15,.36,1) .06s!important}
+.tour{animation:fade .45s ease-out}
+.tcont.swap{animation:swap .5s cubic-bezier(.22,1,.36,1)!important}
+.td i{transition:width .5s cubic-bezier(.22,1.2,.36,1),background .4s!important}
+.logo .mbody,.logo .eyes,.logo .mgear,.logo .mbulb{animation:none}
+.bg *{animation-play-state:paused!important}
+.ic{pointer-events:none}
+.blk{transition:transform .5s cubic-bezier(.22,1,.36,1),opacity .3s ease!important}
+.blk.sel{filter:none!important;transform:scale(1.07)}
+.blk:hover{transform:translateY(-2px) scale(1.02)}
+.st.enter .blk{animation:rise .6s cubic-bezier(.22,1,.36,1) backwards!important;animation-delay:calc(var(--i)*60ms + 80ms)!important}
+.fl{animation-duration:1.6s}
+.has-sel .fl{animation-play-state:paused}
+#mgp{transform-box:fill-box;transform-origin:center}
+.mgear{animation-duration:8s}
+.halo{fill:#eaf3ff;opacity:0;transition:opacity .3s ease}
+.blk.sel .halo{opacity:1}
+.card.fill{background:transparent!important;box-shadow:none!important}
+.halo{fill:transparent!important;opacity:1!important}
+.card.fill{background:#fff!important;box-shadow:0 1px 2px #0000000a,0 4px 14px #0000000d!important;padding:18px 14px!important}
+#dg{text-rendering:geometricPrecision}
+#dg .blk>text{fill:#1d1d1f!important;font-size:15px!important;font-weight:700!important;letter-spacing:.01em}
+#dg .blk[data-t^="Error"]>text{fill:#6e6e73!important;font-size:13px!important;font-weight:700!important}
+#dg>text{fill:#6e6e73!important;font-size:14px!important;font-weight:700!important}
+.spot,.tip{transition:none!important}
+.spot{box-shadow:none!important;border:3px solid #ffffffd9;border-radius:18px;box-sizing:border-box;will-change:transform;contain:none!important;opacity:0}
+.tip{will-change:transform}
+.dim{position:fixed;inset:0;background:#0000008c;pointer-events:none}
+.ptt{position:relative;padding:0 40px;flex:none;text-align:center;font-weight:800;font-size:15px;letter-spacing:-.01em;margin:0 0 8px}
+.stt{flex:none;margin-top:6px;font-size:12px;font-weight:600;color:#1d1d1f;line-height:1.35;min-height:2.7em;font-variant-numeric:tabular-nums}
+.plot .pill{display:none}
+.fsb{position:absolute;right:0;top:-5px;width:32px;height:32px;padding:0;border:0;border-radius:50%;background:var(--bg);color:var(--bl);display:grid;place-items:center;cursor:pointer;transition:transform .3s var(--sp)}
+.fsb:active{transform:scale(.88)}
+.card.plot.full{position:fixed;inset:0;z-index:30;border-radius:0;min-height:0;margin:0;box-shadow:none;background:#fff;overflow:auto;padding:calc(12px + env(safe-area-inset-top)) 14px calc(12px + env(safe-area-inset-bottom))}
+.card.plot.full .cvw{min-height:0}
+.cvw{min-height:240px}
+@media (min-width:700px){.ptt{font-size:17px}}
+@media (max-width:520px){
+.scene{height:clamp(90px,17vh,160px);height:clamp(90px,17dvh,160px);padding:2px}
+.card.plot{min-height:540px;padding:10px 8px}
+.row{gap:6px;margin-bottom:6px}
+.seg button{padding:5px 10px;font-size:12px}
+.ptt{font-size:14px}.stt{font-size:11px}
+.scr{margin-top:4px}
+}
+.cvw{min-height:150px}
+@media (max-width:520px){
+.scene{height:clamp(90px,17vh,160px);height:clamp(90px,17dvh,160px);padding:2px}
+.card.plot{min-height:290px;padding:10px}
+.row{gap:6px;margin-bottom:6px}
+.pill{padding:3px 9px;font-size:12px}
+.seg button{padding:5px 10px;font-size:12px}
+.scr{margin-top:4px}
+}
+</style></head><body>
+<div id="app">
+<header class="hd">
+<div class="brand"><svg class="logo" viewBox="0 0 100 100" aria-label="DA signature icon"><defs><linearGradient id="ig" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4cb4ff"/><stop offset="1" stop-color="#0058d0"/></linearGradient></defs><rect width="100" height="100" rx="23" fill="url(#ig)"/><g transform="translate(0,-4)" fill="none" stroke="#fff" stroke-linecap="round" stroke-linejoin="round" stroke-width="6.5"><path d="M18 32V68H30C44 68 50 60 50 50C50 40 44 32 30 32Z"/><path d="M54 70L68 30L82 70M59 57H77"/></g><path d="M16 80C34 88 52 72 84 80" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/></svg><div><b>Motor Lab</b><small>by Dominic Andrew M. Alberto</small></div></div>
+<div class="hr"><button class="cog" id="hp" aria-label="Start tutorial" title="Tutorial">?</button><button class="cog set" id="st" aria-label="Motor settings" title="Settings"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 7h9M19 7h1M4 17h1M11 17h9"/><circle cx="16" cy="7" r="2.6"/><circle cx="8" cy="17" r="2.6"/></svg><span class="lb">Settings</span></button></div>
+</header>
+<nav class="tabs" id="tabs"><div class="thumb" id="th"></div><button data-n="0"><i>1</i>Loop</button><button data-n="1"><i>2</i>Tune</button><button data-n="2"><i>3</i>Run</button><button data-n="3"><i>4</i>Results</button></nav>
+
+<main>
+<section class="st">
+<div class="coach"><div class="mv" id="mv"></div><div class="bub"><span id="bub"></span></div></div>
+<h1>Meet the control loop</h1>
+<div class="card fill"><svg viewBox="0 34 640 160" id="dg">
+<defs><marker id="ar" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" refX="9" refY="6" orient="auto"><path d="M1,1L10,6L1,11z" fill="#aeaeb2"/></marker></defs>
+<g fill="none" stroke="#aeaeb2" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+<path class="fl" d="M82 82H94"/><path d="M97 82H104"/><path d="M103 77L112 82L103 87Z" fill="#aeaeb2" stroke-width="2"/>
+<path class="fl" d="M164 82H178"/><path d="M183 82H190"/><path d="M189 77L198 82L189 87Z" fill="#aeaeb2" stroke-width="2"/>
+<path class="fl" d="M268 82H306"/><path d="M311 82H318"/><path d="M317 77L326 82L317 87Z" fill="#aeaeb2" stroke-width="2"/>
+<path class="fl" d="M398 82H440"/><path d="M445 82H452"/><path d="M451 77L460 82L451 87Z" fill="#aeaeb2" stroke-width="2"/>
+<path class="fl" d="M528 82H602"/><path d="M607 82H614"/><path d="M613 77L622 82L613 87Z" fill="#aeaeb2" stroke-width="2"/>
+<path class="fl" d="M585 82V165H432"/><path d="M427 165H420"/><path d="M421 160L412 165L421 170Z" fill="#aeaeb2" stroke-width="2"/>
+<path class="fl" d="M302 165H138V134"/><path d="M138 129V122"/><path d="M133 123L138 114L143 123Z" fill="#aeaeb2" stroke-width="2"/>
+<circle cx="585" cy="82" r="5.5" fill="#aeaeb2" stroke="none"/>
+</g>
+<g class="blk" data-t="Setpoint: the speed you WANT. Here it jumps from 0 to 1 rad/s."><rect x="8" y="50" width="84" height="64" rx="16" fill="#ffcc00"/><g class="ic" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" transform="translate(50 75)"><circle r="13"/><circle r="6.5"/><circle r="1.8" fill="#fff" stroke="none"/></g><text x="50" y="106" text-anchor="middle" font-weight="800" fill="#fff" font-size="14">Setpoint</text></g>
+<g class="blk" data-t="Error = setpoint &minus; measured speed. Positive error means: speed up!"><circle cx="138" cy="82" r="20" fill="#fff" stroke="#aeaeb2" stroke-width="4"/><text x="138" y="89" text-anchor="middle" font-weight="800" font-size="22" fill="#6e6e73">&#931;</text><text class="ic" x="122" y="72" text-anchor="middle" font-weight="800" font-size="13" fill="#34c759">+</text><text class="ic" x="154" y="107" text-anchor="middle" font-weight="800" font-size="15" fill="#ff3b30">&#8722;</text><text class="ic" x="138" y="52" text-anchor="middle" font-weight="800" font-size="12" fill="#6e6e73">Error</text></g>
+<g class="blk" data-t="PID: P reacts now, I fixes leftover error, D calms the wobble."><rect x="184" y="50" width="96" height="64" rx="16" fill="#34c759"/><g class="ic" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" transform="translate(232 75)"><path d="M-14 12V-12M-14 12H15" stroke-opacity=".55" stroke-width="2.4"/><path d="M-11 8C-5 8-5-10 1-10S6-3 14-4"/></g><text x="232" y="106" text-anchor="middle" font-weight="800" fill="#fff" font-size="16">PID</text></g>
+<g class="blk" data-t="The L298N driver turns the controller's number into PWM voltage."><rect x="314" y="50" width="96" height="64" rx="16" fill="#0071e3"/><g class="ic" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" transform="translate(362 75)"><path d="M-15 10V-8H-7V10H1V-8H9V10H15"/></g><text x="362" y="106" text-anchor="middle" font-weight="800" fill="#fff" font-size="15">Driver</text></g>
+<g class="blk" data-t="The DC motor is the plant. It can't jump to speed instantly: it has inertia!"><rect x="446" y="50" width="96" height="64" rx="16" fill="#ff9f0a"/><g class="ic" transform="translate(494 75)"><g class="mgear"><path id="mgp" fill="#fff" stroke="#fff" stroke-width="2" stroke-linejoin="round"/><circle cx="8" cy="0" r="1.8" fill="#ff9f0a"/></g><circle r="4.5" fill="#ff9f0a"/></g><text x="494" y="106" text-anchor="middle" font-weight="800" fill="#fff" font-size="15">Motor</text></g>
+<g class="blk" data-t="The sensor measures the real speed and sends it back. That is feedback!"><rect x="300" y="144" width="112" height="44" rx="14" fill="#af52de"/><g class="ic" transform="translate(323 166)" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round"><circle r="11"/><circle r="6" stroke-width="3.4" stroke-dasharray="2.36 2.36"/><circle r="1.8" fill="#fff" stroke="none"/></g><text x="368" y="171" text-anchor="middle" font-weight="800" fill="#fff" font-size="15">Sensor</text></g>
+<text x="604" y="66" text-anchor="middle" font-weight="800" fill="#6e6e73" font-size="14">Speed</text></svg></div>
+<p class="hint"><i></i>Tap any block to learn what it does</p>
+<a class="ref" href="https://jnte.ft.unand.ac.id/index.php/jnte/article/view/1301" target="_blank" rel="noopener noreferrer"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5M10 13h6M10 17h6"/></svg><span><b>Based on research:</b> Digital PID Trainer Based On Arduino For DC Motor Speed Control With Ziegler Nichols Method</span></a>
+</section>
+
+<section class="st" hidden>
+<h1>Pick your controller</h1><p class="lead">A is the paper's Ziegler-Nichols tuning. Pick B to compare.</p>
+<div class="opts" id="op">
+<div class="opt on" data-k="5,1,.25"><b><i class="dot" style="--c:#34c759"></i>Gentle</b><code>Kp 5 &middot; Ki 1 &middot; Kd 0.25</code><small>Slower, little overshoot</small></div>
+<div class="opt" data-k="8,1,.8"><b><i class="dot" style="--c:#0071e3"></i>Calm</b><code>Kp 8 &middot; Ki 1 &middot; Kd 0.8</code><small>Fast rise, tiny overshoot</small></div>
+<div class="opt" data-k="25,2,.25"><b><i class="dot" style="--c:#ff9f0a"></i>Hard</b><code>Kp 25 &middot; Ki 2 &middot; Kd 0.25</code><small>Very fast, big overshoot</small></div></div>
+<div class="card"><b>Or tune it yourself</b>
+<div class="sl">Kp<input type="range" id="p2" min="0" max="40" step=".1" value="5"><output></output></div>
+<div class="sl">Ki<input type="range" id="i2" min="0" max="5" step=".05" value="1"><output></output></div>
+<div class="sl">Kd<input type="range" id="d2" min="0" max="2" step=".01" value=".25"><output></output></div></div>
+</section>
+
+<section class="st" hidden>
+<div class="card scene"><svg viewBox="0 0 460 230" id="sc">
+<path d="M25 160A95 95 0 0 1 215 160" pathLength="100" fill="none" stroke="#e5e5ea" stroke-width="20" stroke-linecap="round"/>
+<path id="gf" d="M25 160A95 95 0 0 1 215 160" pathLength="100" fill="none" stroke="#34c759" stroke-width="20" stroke-linecap="round" stroke-dasharray="0 100"/>
+<line id="gt" stroke="#ff3b30" stroke-width="5" stroke-linecap="round"/>
+<g id="nd"><line x1="120" y1="160" x2="120" y2="96" stroke="#1d1d1f" stroke-width="6" stroke-linecap="round"/></g><circle cx="120" cy="160" r="11" fill="#1d1d1f"/>
+<text id="gv" x="120" y="205" text-anchor="middle" font-size="30" font-weight="800" fill="#1d1d1f">0.00</text><text x="120" y="224" text-anchor="middle" font-size="13" font-weight="700" fill="#aeaeb2">rad/s &middot; red tick = setpoint</text>
+<g transform="translate(0,8)"><g id="gaS"><path id="gaSp" fill="#c77700" stroke="#c77700" stroke-width="3" stroke-linejoin="round"/></g></g>
+<g id="ga"><path id="gap" fill="#ff9f0a" stroke="#ff9f0a" stroke-width="3" stroke-linejoin="round"/><circle cx="320" cy="80" r="34" fill="#ffc85c"/><circle cx="320" cy="80" r="14" fill="#fff"/><line x1="338" y1="80" x2="362" y2="80" stroke="#fff" stroke-width="6" stroke-linecap="round"/></g>
+<g transform="translate(0,8)"><g id="gbS"><path id="gbSp" fill="#0058b0" stroke="#0058b0" stroke-width="3" stroke-linejoin="round"/></g></g>
+<g id="gb"><path id="gbp" fill="#0071e3" stroke="#0071e3" stroke-width="3" stroke-linejoin="round"/><circle cx="355.4" cy="165.5" r="24" fill="#5aa9f0"/><circle cx="355.4" cy="165.5" r="10" fill="#fff"/><line x1="369" y1="165.5" x2="385" y2="165.5" stroke="#fff" stroke-width="5" stroke-linecap="round"/></g>
+<text x="320" y="20" text-anchor="middle" font-weight="800" fill="#ff9f0a" font-size="14">Motor</text><text x="410" y="215" text-anchor="middle" font-weight="800" fill="#0071e3" font-size="14">Load</text></svg></div>
+<div class="card plot"><div class="ptt">Live DC Motor PID Simulation<button class="fsb" id="fsb" type="button" aria-label="Full size graph" title="Full size"></button></div>
+<div class="row"><div class="seg" id="gs"><div class="sth" id="sth"></div><button data-r="A">A &middot; Z-N</button><button data-r="B" class="on">B &middot; Yours</button></div><span class="pill" style="--c:#ff3b30"><i></i>Setpoint <em id="spv">1</em></span><div id="lg" style="display:contents"></div><div class="seg" id="zs"><div class="sth" id="zth" style="transform:translateX(100%)"></div><button data-z="0">Full</button><button data-z="1" class="on">Zoom</button></div></div>
+<div class="cvw"><canvas id="cv"></canvas></div>
+<div class="stt" id="stt"></div><div class="scr"><button class="ib" id="pp" aria-label="Play or pause"></button><input type="range" id="sl" min="0" max="1000" value="0" aria-label="Time"><span id="tm">0.0 / 30 s</span></div></div>
+</section>
+
+<section class="st" hidden>
+<h1>How did you do?</h1><p class="lead" id="vd"></p>
+<div class="card"><div id="met"></div></div>
+<p class="note">Paper (its own motor): rise 0.4866 s &middot; settling 2.5829 s &middot; overshoot 19.6194 % &middot; error 0.0861 %. Motor constants here are assumed.</p>
+<a class="card refc" href="https://jnte.ft.unand.ac.id/index.php/jnte/article/view/1301" target="_blank" rel="noopener noreferrer"><div class="ri"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5M10 13h6M10 17h6"/></svg></div><div class="rt"><small>Reference</small><b>Digital PID Trainer Based On Arduino For DC Motor Speed Control With Ziegler Nichols Method</b><span>Ardana, Maulana &amp; Wibisono &middot; Jurnal Nasional Teknik Elektro 14(3), 173&ndash;180, 2025</span></div><div class="ra"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></div></a>
+<p class="credit">Prepared by Dominic Andrew M. Alberto</p>
+</section>
+</main>
+
+<footer><button class="btn s" id="bk">Back</button><button class="btn p" id="go">Continue</button></footer>
+</div>
+
+<div class="sheet" id="sh" hidden><div class="panel" role="dialog" aria-label="Settings">
+<div class="ph"><b>Motor &amp; signal settings</b><button id="shx">Done</button></div>
+<div class="g" id="pn">
+<label>R (&#937;)<input id="R" type="number" step="any" value="2"></label><label>L (H)<input id="L" type="number" step="any" value="0.5"></label><label>K (Kt = Ke)<input id="K" type="number" step="any" value="0.2"></label><label>J (kg&middot;m&sup2;)<input id="J" type="number" step="any" value="0.1"></label><label>b (N&middot;m&middot;s)<input id="b" type="number" step="any" value="0.05"></label><label>Setpoint (rad/s)<input id="sp" type="number" step="any" value="1"></label><label>Duration (s)<input id="T" type="number" step="any" value="30"></label></div>
+<label class="tg"><input type="checkbox" id="ol" checked>Show open-loop (no controller)</label>
+<label class="tg"><input type="checkbox" id="sat">Limit output to &plusmn;12 V</label>
+<button class="rs" id="rs">Reset to defaults</button>
+</div></div>
+
+<div class="tour" id="tour" hidden><div class="spot none" id="spot"></div><div class="tip" id="tip" role="dialog" aria-modal="true" aria-label="Tutorial"><div class="tcont" id="tcont"><div class="th"><div class="mv"></div><div><small id="tc"></small><b id="tt"></b></div></div><p id="tx"></p></div><div class="td" id="td"></div><div class="tb"><button class="sk" id="tskip">Skip tour</button><span><button class="pv" id="tprev">Back</button><button class="nx" id="tnext">Next</button></span></div></div></div>
+
+<script>
+const G=id=>document.getElementById(id),$$=s=>[...document.querySelectorAll(s)],num=id=>+G(id).value,pos=id=>Math.max(1e-6,num(id)||1e-6);
+const C={A:'#0071e3',B:'#ff9f0a',O:'#aeaeb2',S:'#ff3b30'},NM={A:'A Z-N',B:'B Yours',O:'Open'},AG=[11.7,1,.25];
+const MSG=["Hi, I'm Doms! Tap the blocks to explore the loop.",'Pick a controller or tune it yourself. Higher Kp is faster but wobblier!','Press play and watch the motor chase the red tick.','Nice work! Compare A and B below.'];
+const gp=(n,ro,ri,cx,cy)=>{let d='',s=2*Math.PI/n;for(let i=0;i<n;i++){const a=i*s;for(const[r,t]of[[ri,-.3],[ro,-.15],[ro,.15],[ri,.3]])d+=(d?'L':'M')+(cx+r*Math.cos(a+t*s)).toFixed(1)+' '+(cy+r*Math.sin(a+t*s)).toFixed(1)}return d+'Z'};
+G('gap').setAttribute('d',gp(16,58,48,320,80));G('gaSp').setAttribute('d',gp(16,58,48,320,80));
+G('gbp').setAttribute('d',gp(12,44,35,355.4,165.5));G('gbSp').setAttribute('d',gp(12,44,35,355.4,165.5));
+const rot=(ids,a,x,y)=>ids.forEach(i=>G(i).setAttribute('transform',`rotate(${a} ${x} ${y})`));
+rot(['gb','gbS'],22.5,355.4,165.5);G('mgp').setAttribute('d',gp(10,14,10.5,0,0));
+{const t=Math.PI*(1-1/1.5),c=Math.cos(t),s=Math.sin(t),l=G('gt');l.setAttribute('x1',120+78*c);l.setAttribute('y1',160-78*s);l.setAttribute('x2',120+112*c);l.setAttribute('y2',160-112*s)}
+const cv=G('cv'),cx=cv.getContext('2d'),gc=document.createElement('canvas');
+let D=null,W=0,H=0,dpr=1,raf=0,gr='B',step=0,ps={p:0,play:false,last:0};let zm=innerWidth<700?1:0;
+const LM=46,TM=14,RM=16,BM=40,FN='700 12px -apple-system,"Segoe UI",system-ui,sans-serif';
+const DEF={};['R','L','K','J','b','sp','T'].forEach(i=>DEF[i]=G(i).value);
+
+function setBub(t){const e=G('bub');e.textContent=t;e.classList.remove('swap');void e.offsetWidth;e.classList.add('swap')}
+function sim(P,g,sat,ol,T,sp){
+  const dt=.001,N=T/dt|0,Tf=.02,{R,L,K,J,b}=P,y=new Float32Array(N),vu=new Float32Array(N);
+  let i=0,w=0,I=0,pe=0,d=0,V=ol?sp*(b*R+K*K)/K:0;
+  for(let k=0;k<N;k++){
+    if(!ol){const e=sp-w;d+=dt/(Tf+dt)*((e-pe)/dt-d);pe=e;
+      const Iu=I+e*dt;let u=g[0]*e+g[1]*Iu+g[2]*d;
+      if(sat){const c=Math.max(-12,Math.min(12,u));if(c===u)I=Iu;u=c}else I=Iu;V=u}
+    i+=(V-R*i-K*w)/L*dt;w+=(K*i-b*w)/J*dt;y[k]=w;vu[k]=V}
+  return{y,u:vu}}
+function metrics(y,sp){
+  const dt=.001,n=y.length,m=Math.floor(n*.95);let f=0;for(let k=m;k<n;k++)f+=y[k];f/=Math.max(1,n-m);
+  let pk=-1e9,t1=-1,t9=-1,ts=0;
+  for(let k=0;k<n;k++){const v=y[k];if(v>pk)pk=v;if(t1<0&&v>=.1*sp)t1=k;if(t9<0&&v>=.9*sp)t9=k}
+  for(let k=n-1;k>=0;k--)if(Math.abs(y[k]-sp)>.02*Math.abs(sp)){ts=(k+1)*dt;break}
+  return{pk,tr:t9<0?NaN:(t9-t1)*dt,ts:ts>=n*dt-.01?NaN:ts,os:Math.max(0,(pk-sp)/sp*100),sse:Math.abs(sp-f)/Math.abs(sp)*100}}
+const nice=(x,n)=>{const r=x/n,m=10**Math.floor(Math.log10(r)),f=r/m;return(f<=1?1:f<=2?2:f<=2.5?2.5:f<=5?5:10)*m};
+const X=s=>LM+s/D.V*(W-LM-RM),Y=v=>TM+(H-TM-BM)*(1-Math.min(Math.max(v/D.mx,0),1));
+function compute(){
+  const P={R:Math.max(0,num('R')),L:pos('L'),K:num('K'),J:pos('J'),b:num('b')},T=Math.min(60,Math.max(1,num('T')||30)),sp=num('sp')||1,sat=G('sat').checked;
+  const defs=[['A',AG,0],['B',[num('p2'),num('i2'),num('d2')],0]];if(G('ol').checked)defs.push(['O',[0,0,0],1]);
+  const N=T*1000|0,sx=Math.ceil(N/1400),M=Math.ceil(N/sx);let mx=Math.abs(sp)*1.15,umx=0,umn=0;
+  const runs=defs.map(([k,g,o])=>{const s=sim(P,g,sat,o,T,sp),y=s.y,m=metrics(y,sp),ds=new Float32Array(M),du=new Float32Array(M),an=new Float32Array(M);
+    for(let i=0;i<M;i++){const q=Math.min(y.length-1,i*sx);ds[i]=y[q];du[i]=s.u[q];if(du[i]>umx)umx=du[i];if(du[i]<umn)umn=du[i];if(i)an[i]=an[i-1]+(ds[i]+ds[i-1])/2*sx*.001*57.2958}
+    if(isFinite(m.pk))mx=Math.max(mx,m.pk*1.08);return{k,m,ds,du,an,yv:0,uv:0}});
+  if(!isFinite(mx)||mx>1e6)mx=Math.abs(sp)*2;
+  if(!isFinite(umx)||!isFinite(umn)){umx=12;umn=0}
+  let V=T;{const ta=runs[0].m.ts,tb=runs[1].m.ts;if(typeof zm!=='undefined'&&zm&&isFinite(ta)&&isFinite(tb))V=Math.min(T,Math.max(5,Math.ceil(Math.max(ta,tb)*1.6)))}
+  D={runs,T:V,V,Tfull:T,sp,mx,umx,umn,sat,sx,M};
+  const f=(v,d,u)=>isFinite(v)?v.toFixed(d)+u:'\u2014';
+  const rows=[['Rise time','tr',3,' s'],['Settling (2%)','ts',2,' s'],['Overshoot','os',2,' %'],['Steady-state error','sse',3,' %']];
+  G('met').innerHTML='<table><thead><tr><th></th>'+runs.map(r=>`<th><i style="--c:${C[r.k]}"></i>${NM[r.k]}</th>`).join('')+'</tr></thead><tbody>'+rows.map(([n,k,d,u])=>`<tr><td>${n}</td>`+runs.map(r=>`<td>${f(r.m[k],d,u)}</td>`).join('')+'</tr>').join('')+'</tbody></table>';
+  const a=runs[0].m,b=runs[1].m;
+  G('vd').textContent=!isFinite(a.os+b.os)?'Check your settings.':b.os<a.os-.5?`B overshoots ${(a.os-b.os).toFixed(1)} points less than A, and ${b.tr>a.tr?'rises '+((b.tr/a.tr-1)*100).toFixed(0)+'% slower':'is also faster'}. That\u2019s the speed vs. wobble trade-off!`:b.os>a.os+.5?`B overshoots ${(b.os-a.os).toFixed(1)} points more than A, and ${b.tr<a.tr?'rises '+((1-b.tr/a.tr)*100).toFixed(0)+'% faster':'isn\u2019t faster'}.`:'A and B behave almost the same. Try changing Kp or Kd more!';
+  G('spv').textContent=sp;
+  G('lg').innerHTML=''}
+let GM={};
+function layout(){
+  const r=cv.getBoundingClientRect();if(!r.width||!r.height||!D)return;
+  dpr=Math.min(devicePixelRatio||1,2);W=r.width;H=r.height;cv.width=gc.width=Math.round(W*dpr);cv.height=gc.height=Math.round(H*dpr);
+  const sm=W<460,fs=sm?10.5:12,l=sm?48:56,rr=sm?10:16,tm=4,bm=sm?36:42,gp=sm?12:18,aw=W-l-rr;
+  const hiB=Math.max(.5,Math.min(D.umx*1.08,13.2));let loB=Math.max(-13.2,Math.min(0,D.umn)*1.1);if(loB>-1e-9)loB=-hiB*.05;
+  const g=gc.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,W,H);
+  const lf=sm?10:11.5,rh=sm?14:17,sw=sm?18:24,ig=sm?10:16,FF=' -apple-system,"Segoe UI",system-ui,sans-serif';
+  g.font='500 '+lf+'px'+FF;
+  const hasO=D.runs.some(q=>q.k==='O'),lim=12<hiB;
+  const la=[{t:'A \u00b7 Z-N',c:C.A},{t:'B \u00b7 Yours',c:C.B}];if(hasO)la.push({t:'Open-loop',c:C.O,d:[2,4]});
+  const lb=la.slice();
+  la.push({t:'Setpoint = '+(+D.sp.toFixed(2))+' rad/s',c:'#d62828',d:[5,3],w:1.5},{t:'Settling band \u00b12%',box:1});
+  if(lim)lb.push({t:'12 V supply',c:'#8e8e93',d:[5,3],w:1.2});
+  const flow=items=>{const rows=[];let cur=[],cw=0;items.forEach(o=>{o.ww=sw+5+g.measureText(o.t).width;if(cur.length&&cw+ig+o.ww>aw){rows.push({it:cur,w:cw});cur=[];cw=0}cw+=(cur.length?ig:0)+o.ww;cur.push(o)});if(cur.length)rows.push({it:cur,w:cw});return rows};
+  const RA=flow(la),RB=flow(lb),lhA=RA.length*rh+4,lhB=RB.length*rh+4;
+  const ph=Math.max(40,(H-tm-bm-gp-lhA-lhB)/2);
+  GM={sm,fs,l,r:W-rr,w:aw,A:{t:tm+lhA,h:ph,lo:-D.mx*.04,hi:D.mx,lb:'Speed (rad/s)'},B:{t:tm+lhA+ph+gp+lhB,h:ph,lo:loB,hi:hiB,lb:'Output (V)'}};
+  g.font='500 '+fs+'px'+FF;
+  const xs=nice(D.T,Math.max(3,Math.min(8,W/60|0))),fx=v=>+v.toFixed(4),gx=t=>GM.l+t/D.T*GM.w;
+  [GM.A,GM.B].forEach((P,pi)=>{
+    const gy=v=>P.t+P.h*(1-(v-P.lo)/(P.hi-P.lo)),ys=nice(P.hi-P.lo,Math.max(2,Math.min(5,P.h/32|0)));
+    if(pi===0){g.fillStyle='rgba(52,199,89,.2)';const y1=gy(D.sp*1.02),y2=gy(D.sp*.98);g.fillRect(GM.l,Math.min(y1,y2),GM.w,Math.abs(y2-y1))}
+    g.lineWidth=1;g.strokeStyle='#e2e2e6';g.beginPath();
+    for(let t=0;t<=D.T+1e-9;t+=xs){const x=Math.round(gx(t))+.5;g.moveTo(x,P.t);g.lineTo(x,P.t+P.h)}
+    for(let v=Math.ceil(P.lo/ys-1e-9)*ys;v<=P.hi+1e-9;v+=ys){const y=Math.round(gy(v))+.5;g.moveTo(GM.l,y);g.lineTo(GM.r,y)}
+    g.stroke();
+    g.strokeStyle='#222';g.fillStyle='#1d1d1f';g.beginPath();
+    for(let t=0;t<=D.T+1e-9;t+=xs){const x=Math.round(gx(t))+.5;g.moveTo(x,P.t+P.h);g.lineTo(x,P.t+P.h+4)}
+    for(let v=Math.ceil(P.lo/ys-1e-9)*ys;v<=P.hi+1e-9;v+=ys){const y=Math.round(gy(v))+.5;g.moveTo(GM.l,y);g.lineTo(GM.l-4,y)}
+    g.stroke();
+    g.textAlign='right';g.textBaseline='middle';
+    for(let v=Math.ceil(P.lo/ys-1e-9)*ys;v<=P.hi+1e-9;v+=ys)g.fillText(fx(v),GM.l-7,gy(v));
+    if(pi===1){g.textAlign='center';g.textBaseline='top';for(let t=0;t<=D.T+1e-9;t+=xs)g.fillText(fx(t),gx(t),P.t+P.h+7)}
+    g.save();g.translate(11,P.t+P.h/2);g.rotate(-Math.PI/2);g.textAlign='center';g.textBaseline='middle';g.fillText(P.lb,0,0);g.restore();
+    g.lineWidth=1;g.strokeStyle='#222';g.strokeRect(GM.l+.5,P.t+.5,GM.w-1,P.h-1)});
+  g.fillStyle='#1d1d1f';g.textAlign='center';g.textBaseline='alphabetic';g.fillText('Simulation time (seconds)',GM.l+GM.w/2,H-5);
+  g.font='500 '+lf+'px'+FF;g.textAlign='left';g.textBaseline='middle';
+  const dl=(rows,y0)=>rows.forEach((row,ri)=>{let x=GM.l+(GM.w-row.w)/2;const y=y0+ri*rh+rh/2;
+    row.it.forEach(o=>{
+      if(o.box){g.fillStyle='rgba(52,199,89,.3)';g.fillRect(x,y-4,sw,8)}
+      else{g.strokeStyle=o.c;g.lineWidth=o.w||2;g.setLineDash(o.d||[]);g.beginPath();g.moveTo(x,y);g.lineTo(x+sw,y);g.stroke();g.setLineDash([])}
+      g.fillStyle='#1d1d1f';g.fillText(o.t,x+sw+5,y);x+=o.ww+ig})});
+  dl(RA,tm);dl(RB,GM.B.t-lhB);
+  draw()}
+function draw(){
+  if(!D||!W||!GM.A)return;
+  cx.setTransform(dpr,0,0,dpr,0,0);cx.clearRect(0,0,W,H);cx.drawImage(gc,0,0,W,H);
+  const p=ps.p,dt=D.sx*.001,f=p/dt,i=Math.min(D.M-1,f|0),fr=f-i,hx=i<D.M-1?p:i*dt,sm=GM.sm,A=GM.A,B=GM.B;
+  const gx=t=>GM.l+t/D.T*GM.w,gy=(P,v)=>P.t+P.h*(1-(v-P.lo)/(P.hi-P.lo));
+  const clip=P=>{cx.save();cx.beginPath();cx.rect(GM.l-8,P.t,GM.w+16,P.h);cx.clip()};
+  const ip=a=>i<D.M-1?a[i]+(a[i+1]-a[i])*fr:a[i];
+  clip(A);cx.setLineDash([6,4]);cx.strokeStyle='#d62828';cx.lineWidth=1.5;cx.beginPath();cx.moveTo(gx(0),gy(A,D.sp));cx.lineTo(gx(D.T),gy(A,D.sp));cx.stroke();cx.restore();
+  const lim=12<B.hi;
+  if(lim){clip(B);cx.setLineDash([6,4]);cx.strokeStyle='#8e8e93';cx.lineWidth=1.2;cx.beginPath();cx.moveTo(gx(0),gy(B,12));cx.lineTo(gx(D.T),gy(B,12));cx.stroke();cx.restore()}
+  const ord=[...D.runs].sort((a,b)=>(b.k==='O')-(a.k==='O'));let ang=0,sv=0;
+  for(const r of ord){
+    r.yv=ip(r.ds);r.uv=ip(r.du);const av=ip(r.an);
+    [[A,r.ds],[B,r.du]].forEach(([P,arr])=>{
+      clip(P);cx.strokeStyle=C[r.k];cx.lineWidth=r.k==='O'?(sm?1.6:2):(sm?1.8:2.3);cx.setLineDash(r.k==='O'?[2,4]:[]);cx.lineJoin=cx.lineCap='round';
+      cx.beginPath();for(let j=0;j<=i;j++){const x=gx(j*dt),y=gy(P,arr[j]);j?cx.lineTo(x,y):cx.moveTo(x,y)}
+      if(i<D.M-1)cx.lineTo(gx(hx),gy(P,ip(arr)));cx.stroke();
+      cx.setLineDash([]);cx.fillStyle='#fff';cx.beginPath();cx.arc(gx(hx),gy(P,ip(arr)),sm?3.5:4.5,0,7);cx.fill();cx.lineWidth=2;cx.stroke();cx.restore()});
+    if(r.k===gr){ang=av;sv=r.yv}}
+  const rg=D.runs.find(r=>r.k===gr)||D.runs[0],tol=.02*Math.abs(D.sp);
+  const stx=Math.abs(rg.yv-D.sp)<=tol?'Within \u00b12% band':rg.yv>D.sp?'Overshooting setpoint':'Speeding up';
+  G('stt').textContent='Time: '+p.toFixed(1)+' s | Setpoint: '+D.sp.toFixed(2)+' rad/s | '+gr+' speed: '+rg.yv.toFixed(2)+' rad/s | '+gr+' voltage: '+rg.uv.toFixed(1)+' V | '+stx;
+  rot(['ga','gaS'],ang,320,80);rot(['gb','gbS'],22.5-ang*16/12,355.4,165.5);
+  const fr2=Math.min(Math.max(sv/(D.sp*1.5),0),1);G('gf').setAttribute('stroke-dasharray',fr2*100+' 100');
+  G('gf').setAttribute('stroke',Math.abs(sv-D.sp)<.05*Math.abs(D.sp)?'#34c759':sv>D.sp?'#ff9f0a':'#0071e3');
+  G('nd').setAttribute('transform',`rotate(${fr2*180-90} 120 160)`);G('gv').textContent=sv.toFixed(2);
+  G('sl').value=p/D.T*1000;G('tm').textContent=p.toFixed(1)+' / '+(+D.T.toFixed(1))+' s'}
+const IC={play:'<svg width="16" height="16" viewBox="0 0 14 14"><path d="M3 1.5v11l9-5.5z" fill="#fff"/></svg>',pause:'<svg width="16" height="16" viewBox="0 0 14 14"><rect x="2.5" y="1.5" width="3.2" height="11" rx="1" fill="#fff"/><rect x="8.3" y="1.5" width="3.2" height="11" rx="1" fill="#fff"/></svg>',redo:'<svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M13 8a5 5 0 1 1-1.8-3.8M13 2v3h-3"/></svg>'};
+const btn=()=>G('pp').innerHTML=ps.play?IC.pause:(D&&ps.p>=D.V?IC.redo:IC.play);
+function tick(ts){if(ps.play){ps.p=Math.min(D.V,ps.p+(ts-ps.last)/1000*D.V/7);ps.last=ts;if(ps.p>=D.V){ps.play=false;btn()}}draw();raf=ps.play?requestAnimationFrame(tick):0}
+function play(){if(!D)return;if(ps.p>=D.V)ps.p=0;ps.play=true;ps.last=performance.now();btn();if(!raf)raf=requestAnimationFrame(tick)}
+function clearSel(){$$('.blk').forEach(x=>x.classList.remove('sel'));G('dg').classList.remove('has-sel')}
+function show(n){
+  n=Math.max(0,Math.min(3,n|0));step=n;
+  $$('main .st').forEach((e,i)=>{e.hidden=i!==n;e.classList.remove('enter');if(i===n){void e.offsetWidth;e.classList.add('enter')}});
+  $$('#tabs button').forEach((b,i)=>{b.classList.toggle('on',i===n);b.classList.toggle('done',i<n)});
+  G('th').style.transform=`translateX(${n*100}%)`;
+  clearSel();setBub(MSG[n]);
+  G('go').textContent=n===3?'Play again':'Continue';G('bk').disabled=n===0;
+  ps.play=false;
+  if(n===2){requestAnimationFrame(()=>{layout();ps.p=0;play()})}else btn()}
+G('go').onclick=()=>show(step===3?2:step+1);
+G('bk').onclick=()=>show(step-1);
+$$('#tabs button').forEach(b=>b.onclick=()=>show(+b.dataset.n));
+$$('.blk').forEach((b,i)=>{b.style.setProperty('--i',i);b.onclick=()=>{
+  if(b.classList.contains('sel')){clearSel();setBub(MSG[0]);return}
+  clearSel();b.classList.add('sel');G('dg').classList.add('has-sel');setBub(b.dataset.t)}});
+const kv=()=>['p2','i2','d2'].forEach(i=>G(i).nextElementSibling.textContent=(+G(i).value).toFixed(2).replace(/\.?0+$/,''));
+G('op').onclick=e=>{const o=e.target.closest('.opt');if(!o)return;$$('.opt').forEach(x=>x.classList.toggle('on',x===o));
+  o.dataset.k.split(',').forEach((v,j)=>G(['p2','i2','d2'][j]).value=v);kv();again()};
+['p2','i2','d2'].forEach(i=>G(i).oninput=()=>{$$('.opt').forEach(x=>x.classList.remove('on'));kv();again()});
+let tm;function again(){clearTimeout(tm);tm=setTimeout(()=>{compute();ps.p=0;layout();btn();if(step===2)play()},160)}
+G('pn').addEventListener('input',again);G('ol').onchange=G('sat').onchange=again;
+G('gs').onclick=e=>{const b=e.target.closest('button');if(!b)return;gr=b.dataset.r;const bs=[...G('gs').querySelectorAll('button')];bs.forEach(x=>x.classList.toggle('on',x===b));G('sth').style.transform=`translateX(${bs.indexOf(b)*100}%)`;draw()};
+G('pp').onclick=()=>{if(ps.play){ps.play=false;btn()}else play()};
+G('sl').oninput=e=>{ps.play=false;ps.p=e.target.value/1000*D.V;btn();draw()};
+const sh=G('sh'),openSh=()=>{sh.hidden=false},closeSh=()=>{sh.hidden=true};
+G('st').onclick=openSh;G('shx').onclick=closeSh;sh.onclick=e=>{if(e.target===sh)closeSh()};
+addEventListener('keydown',e=>{if(e.key==='Escape'){if(!G('tour').hidden)endTour();else closeSh()}else if(!G('tour').hidden){if(e.key==='ArrowRight')tourGo(1);if(e.key==='ArrowLeft')tourGo(-1)}});
+G('rs').onclick=()=>{for(const k in DEF)G(k).value=DEF[k];G('ol').checked=true;G('sat').checked=false;again()};
+let rq=0;new ResizeObserver(()=>{cancelAnimationFrame(rq);rq=requestAnimationFrame(layout)}).observe(cv.parentNode);
+addEventListener('orientationchange',()=>setTimeout(layout,200));
+const MAS='<svg class="mas" viewBox="0 0 80 80" aria-hidden="true"><g class="mbody"><line x1="40" y1="17" x2="40" y2="9" stroke="#0058b0" stroke-width="3" stroke-linecap="round"/><circle class="mbulb" cx="40" cy="7" r="4.5" fill="#ffcc00"/><circle cx="9" cy="45" r="6" fill="#0058b0"/><circle cx="71" cy="45" r="6" fill="#0058b0"/><rect x="11" y="17" width="58" height="55" rx="25" fill="#0a84ff"/><path d="M18 34Q20 22 34 20" fill="none" stroke="#fff" stroke-opacity=".35" stroke-width="3" stroke-linecap="round"/><rect x="19" y="29" width="42" height="29" rx="14.5" fill="#fff"/><g class="eyes"><ellipse cx="31" cy="42" rx="3.6" ry="4.8" fill="#1d1d1f"/><circle cx="32.2" cy="40.2" r="1.3" fill="#fff"/><ellipse cx="49" cy="42" rx="3.6" ry="4.8" fill="#1d1d1f"/><circle cx="50.2" cy="40.2" r="1.3" fill="#fff"/></g><path d="M35 50Q40 55 45 50" fill="none" stroke="#1d1d1f" stroke-width="2.6" stroke-linecap="round"/><circle cx="25" cy="50" r="3" fill="#ff8fa3" opacity=".7"/><circle cx="55" cy="50" r="3" fill="#ff8fa3" opacity=".7"/><path class="mgear" d="'+gp(8,7.5,5.5,60,67)+'" fill="#ffcc00" stroke="#ffcc00" stroke-width="1.5" stroke-linejoin="round"/><circle cx="60" cy="67" r="2.4" fill="#0a84ff"/><ellipse cx="29" cy="73" rx="8" ry="3.5" fill="#0058b0"/><ellipse cx="51" cy="73" rx="8" ry="3.5" fill="#0058b0"/></g></svg>';
+$$('.mv').forEach(e=>e.innerHTML=MAS);{const lg=document.querySelector('.logo');if(lg){const d=document.createElement('div');d.className='logo';d.innerHTML=MAS;lg.replaceWith(d)}}
+function hop(){const e=G('mv');e.classList.remove('hop');void e.offsetWidth;e.classList.add('hop')}
+const TS=[
+{t:"Hi, I'm Doms!",x:"Welcome to Motor Lab, my PID motor-speed lesson. This quick tour shows what is inside, including the Settings.",el:null},
+{t:"Four steps",x:"Loop, Tune, Run and Results. Tap any tab to jump, or use Back and Continue.",el:'#tabs'},
+{t:"Tap the blocks",x:"Every block of the control loop explains itself when you tap it. Tap again to deselect.",el:'.card.fill'},
+{t:"Settings are here",x:"Tap this button anytime to change the motor values, setpoint, run time, open-loop view and the \u00b112 V limit.",el:'#st'},
+{t:"Inside Settings",x:"R, L, K, J and b describe the motor. Change any value and the chart updates by itself. Reset brings the defaults back.",el:'.panel',open:true},
+{t:"Run and compare",x:"Tune picks your controller (B). Run plays it against the paper's Ziegler-Nichols controller (A). Results shows the numbers.",el:'footer'},
+{t:"The research behind it",x:"This lab is based on a published article. Tap the link to open the paper.",el:'.ref'},
+{t:"You're all set!",x:"Replay this tour anytime with the ? button. Enjoy the lab.",el:'#hp'}];
+let ti=0,tt=0;
+G('td').innerHTML=TS.map(()=>'<i></i>').join('');
+const dim=document.createElement('div');dim.className='dim';G('tour').insertBefore(dim,G('tour').firstChild);
+const TW={raf:0,cur:null,from:null,to:null,t0:0,dur:0},TK=['x','y','w','h','tx','ty'];
+const ez=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2,lp=(a,b,t)=>a+(b-a)*t,cl=t=>Math.min(1,Math.max(0,t));
+const REDUCED=matchMedia('(prefers-reduced-motion:reduce)');
+function paint(s){
+  const vw=innerWidth,vh=innerHeight,f=v=>v.toFixed(1),sp=G('spot'),tip=G('tip');
+  let d='M0 0H'+vw+'V'+vh+'H0Z';
+  if(s.w>1&&s.h>1){const x=s.x,y=s.y,w=s.w,h=s.h,r=Math.min(18,w/2,h/2);
+    d+='M'+f(x+r)+' '+f(y)+'H'+f(x+w-r)+'A'+r+' '+r+' 0 0 1 '+f(x+w)+' '+f(y+r)+'V'+f(y+h-r)+'A'+r+' '+r+' 0 0 1 '+f(x+w-r)+' '+f(y+h)+'H'+f(x+r)+'A'+r+' '+r+' 0 0 1 '+f(x)+' '+f(y+h-r)+'V'+f(y+r)+'A'+r+' '+r+' 0 0 1 '+f(x+r)+' '+f(y)+'Z'}
+  dim.style.clipPath="path(evenodd,'"+d+"')";
+  sp.style.opacity=s.w>1?1:0;sp.style.width=Math.max(0,s.w)+'px';sp.style.height=Math.max(0,s.h)+'px';
+  sp.style.transform='translate3d('+f(s.x)+'px,'+f(s.y)+'px,0)';
+  tip.style.transform='translate3d('+f(s.tx)+'px,'+f(s.ty)+'px,0)'}
+function frame(now){
+  const t=now-TW.t0,a=ez(cl(t/TW.dur)),b=ez(cl((t-70)/TW.dur)),F=TW.from,T=TW.to;
+  TW.cur={x:lp(F.x,T.x,a),y:lp(F.y,T.y,a),w:lp(F.w,T.w,a),h:lp(F.h,T.h,a),tx:lp(F.tx,T.tx,b),ty:lp(F.ty,T.ty,b)};
+  paint(TW.cur);
+  TW.raf=t<TW.dur+70?requestAnimationFrame(frame):0}
+function tweenTo(T,snap){
+  const c=TW.cur;
+  if(TW.to&&TK.every(k=>Math.abs(TW.to[k]-T[k])<.5))return;
+  cancelAnimationFrame(TW.raf);TW.raf=0;TW.to=T;
+  if(!c||snap||REDUCED.matches){TW.cur=T;paint(T);return}
+  const dist=Math.hypot(T.x-c.x,T.y-c.y)+Math.abs(T.w-c.w)*.3;
+  TW.from=c;TW.t0=performance.now();TW.dur=Math.min(950,Math.max(520,420+dist*.45));
+  TW.raf=requestAnimationFrame(frame)}
+function place(snap){
+  if(G('tour').hidden)return;
+  const s=TS[ti],tip=G('tip'),el=s.el&&document.querySelector(s.el),r=el&&el.getBoundingClientRect(),vw=innerWidth,vh=innerHeight;
+  const tw=Math.min(340,vw-24);tip.style.width=tw+'px';const th=tip.offsetHeight;
+  if(!r||!r.width||!r.height){tweenTo({x:vw/2,y:vh/2,w:0,h:0,tx:(vw-tw)/2,ty:Math.max(12,(vh-th)/2)},snap);return}
+  const pad=6,l0=Math.max(4,r.left-pad),t0=Math.max(4,r.top-pad),r0=Math.min(vw-4,r.right+pad),b0=Math.min(vh-20,r.bottom+pad);
+  let top;if(vh-r.bottom-pad-12>=th)top=r.bottom+pad+12;else if(r.top-pad-24>=th)top=r.top-pad-24-th;else top=(r.top-pad>vh-r.bottom-pad)?12:vh-th-12;
+  tweenTo({x:l0,y:t0,w:r0-l0,h:b0-t0,tx:Math.min(Math.max(12,r.left+r.width/2-tw/2),vw-tw-12),ty:Math.max(12,Math.min(top,vh-th-24))},snap)}
+function tourRender(){
+  const s=TS[ti];
+  if(step!==0)show(0);
+  if(s.open)openSh();else closeSh();
+  G('tt').textContent=s.t;G('tx').textContent=s.x;G('tc').textContent='Tutorial \u00b7 '+(ti+1)+' / '+TS.length;
+  [...G('td').children].forEach((d,i)=>d.classList.toggle('on',i===ti));
+  G('tprev').disabled=ti===0;G('tnext').textContent=ti===TS.length-1?'Done':'Next';
+  const tc=G('tcont');tc.classList.remove('swap');void tc.offsetWidth;tc.classList.add('swap');
+  place();clearTimeout(tt);tt=setTimeout(place,0);
+  try{G('tnext').focus({preventScroll:true})}catch(e){}}
+function startTour(){
+  ti=0;const sp=G('spot'),tip=G('tip');document.body.classList.add('touring');G('tour').hidden=false;
+  TW.cur=null;TW.to=null;tourRender();}
+function endTour(){cancelAnimationFrame(TW.raf);TW.raf=0;TW.cur=null;TW.to=null;document.body.classList.remove('touring');G('tour').hidden=true;clearTimeout(tt);closeSh()}
+function tourGo(d){const n=ti+d;if(n<0)return;if(n>=TS.length){endTour();return}ti=n;tourRender()}
+G('tnext').onclick=()=>tourGo(1);G('tprev').onclick=()=>tourGo(-1);G('tskip').onclick=endTour;G('hp').onclick=startTour;
+let pr=0;addEventListener('resize',()=>{cancelAnimationFrame(pr);pr=requestAnimationFrame(()=>place(true))});
+document.addEventListener('visibilitychange',()=>{document.documentElement.classList.toggle('bg',document.hidden);if(document.hidden&&ps.play){ps.play=false;btn()}});
+(function(){
+const D={'#ffcc00':'#b88a00','#34c759':'#1f8a3a','#0071e3':'#0050a8','#ff9f0a':'#bb6f00','#af52de':'#7a2fa3'};
+document.querySelectorAll('#dg .blk').forEach(b=>{
+  const s=b.firstElementChild,col=D[s.getAttribute('fill')]||'#9a9aa0',c=s.cloneNode(true);
+  c.setAttribute('fill',col);c.setAttribute('stroke',col);c.setAttribute('class','ic');c.setAttribute('transform','translate(0 6)');
+  b.insertBefore(c,s);
+  if(s.tagName==='rect'){s.setAttribute('stroke','#fff');s.setAttribute('stroke-opacity','.3');s.setAttribute('stroke-width','2')}
+  b.querySelectorAll('g.ic').forEach(g=>{
+    const k=g.cloneNode(true);
+    k.setAttribute('transform','translate(0 3) '+(g.getAttribute('transform')||''));
+    [k,...k.querySelectorAll('*')].forEach(e=>{
+      e.removeAttribute('id');
+      ['fill','stroke'].forEach(a=>{const v=e.getAttribute(a);if(v&&v!=='none')e.setAttribute(a,'rgba(0,0,0,.3)')})
+    });
+    g.parentNode.insertBefore(k,g)
+  })
+});
+})();
+(function(){
+const B=[...document.querySelectorAll('#dg .blk')];
+const halo=(x,y,w,h)=>`<rect class="halo" x="${x}" y="${y}" width="${w}" height="${h}" rx="18"/>`;
+const lbl=(x,y,t,c,a)=>`<text x="${x}" y="${y}" text-anchor="${a||'middle'}" font-weight="800" font-size="15" fill="${c}">${t}</text>`;
+const badge=(x,y,c,d,plus)=>`<g transform="translate(${x} ${y})"><circle cy="2" r="8.5" fill="${d}"/><circle r="8.5" fill="${c}" stroke="#fff" stroke-width="1.5"/><path d="M-4 0H4${plus?'M0 -4V4':''}" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/></g>`;
+const gear=gp(16,28,23,0,0);
+const curve='M-22 16C-12 16-10 -20 2 -20C12 -20 14 -8 28 -9';
+const wave='M-28 14H-18V-14H-6V14H6V-14H18V14H28';
+const I=[
+ halo(6,52,88,96)+
+ `<g transform="translate(50 82)"><circle cy="6" r="25" fill="#b88a00"/><circle r="25" fill="#ffcc00"/><circle r="17" fill="#fff"/><circle r="10" fill="#ffcc00"/><circle r="3.6" fill="#b88a00"/></g>`+lbl(50,134,'Setpoint','#b88a00'),
+
+ halo(102,36,72,78)+
+ `<text x="138" y="46" text-anchor="middle" font-weight="800" font-size="12" fill="#6e6e73">Error</text>`+
+ `<g transform="translate(138 82)"><circle cy="5" r="20" fill="#8e8e93"/><circle r="20" fill="#fff" stroke="#aeaeb2" stroke-width="3"/><text y="8" text-anchor="middle" font-weight="800" font-size="22" fill="#6e6e73">&#931;</text></g>`+
+ badge(118,60,'#34c759','#1f8a3a',true)+badge(158,104,'#ff3b30','#b32218',false),
+
+ halo(186,52,92,96)+
+ `<g transform="translate(232 84)"><path d="M-28 -26V22H30" fill="none" stroke="#c7c7cc" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><g transform="translate(0 6)"><path d="${curve}" fill="none" stroke="#1f8a3a" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></g><path d="${curve}" fill="none" stroke="#34c759" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></g>`+lbl(232,134,'PID','#1f8a3a'),
+
+ halo(316,52,92,96)+
+ `<g transform="translate(362 82)"><g transform="translate(0 6)"><path d="${wave}" fill="none" stroke="#0050a8" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></g><path d="${wave}" fill="none" stroke="#0071e3" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></g>`+lbl(362,134,'Driver','#0050a8'),
+
+ halo(446,52,96,96)+
+ `<g transform="translate(494 82)"><g transform="translate(0 6)"><g class="mgear"><path d="${gear}" fill="#bb6f00" stroke="#bb6f00" stroke-width="2" stroke-linejoin="round"/></g></g><g class="mgear"><path d="${gear}" fill="#ff9f0a" stroke="#ff9f0a" stroke-width="2" stroke-linejoin="round"/><circle r="16" fill="#ffc85c"/><circle r="6.5" fill="#fff"/><line x1="9" y1="0" x2="20" y2="0" stroke="#fff" stroke-width="3" stroke-linecap="round"/></g></g>`+lbl(494,134,'Motor','#bb6f00'),
+
+ halo(298,140,116,52)+
+ `<g transform="translate(326 165)"><circle cy="5" r="17" fill="#7a2fa3"/><circle r="17" fill="#af52de"/><circle r="10.5" fill="none" stroke="#fff" stroke-width="5" stroke-dasharray="2.06 2.06"/><circle r="3.6" fill="#fff"/></g>`+lbl(352,171,'Sensor','#7a2fa3','start')
+];
+B.forEach((b,i)=>{if(I[i])b.innerHTML=I[i]});
+})();
+(function(){const zs=G('zs'),bs=[...zs.querySelectorAll('button')];const set=()=>{bs.forEach(x=>x.classList.toggle('on',+x.dataset.z===zm));G('zth').style.transform='translateX('+zm*100+'%)'};set();zs.onclick=e=>{const b=e.target.closest('button');if(!b)return;zm=+b.dataset.z;set();compute();ps.p=0;layout();btn();if(step===2)play()}})();
+(function(){const b=G('fsb'),c=document.querySelector('.card.plot'),EX='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>',CO='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg>';
+const set=on=>{c.classList.toggle('full',on);b.innerHTML=on?CO:EX;b.title=on?'Exit full size':'Full size';b.setAttribute('aria-label',b.title)};
+const open=()=>{set(true);try{const q=c.requestFullscreen&&c.requestFullscreen();if(q&&q.catch)q.catch(()=>{})}catch(e){}};
+const shut=()=>{set(false);try{if(document.fullscreenElement){const q=document.exitFullscreen();if(q&&q.catch)q.catch(()=>{})}}catch(e){}};
+b.innerHTML=EX;b.onclick=()=>c.classList.contains('full')?shut():open();
+document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement&&c.classList.contains('full'))set(false)});
+addEventListener('keydown',e=>{if(e.key==='Escape'&&c.classList.contains('full')&&!document.fullscreenElement)set(false)});
+})();
+kv();compute();show(0);
+setTimeout(startTour,300);
+</script></body></html>
